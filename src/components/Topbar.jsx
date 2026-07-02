@@ -11,8 +11,8 @@ const LABEL_STATO = {
   disconnected: 'MQTT disconnesso'
 }
 
-export default function Topbar({ sezioneAttiva, statoMqtt, notifiche }) {
-  const { supportate, permesso, abilitate, richiediPermesso } = notifiche
+export default function Topbar({ sezioneAttiva, statoMqtt, notifiche, onToggleNotifiche }) {
+  const { supportate, permesso, abilitate } = notifiche
 
   let testoBottone = '🔔 Attiva notifiche desktop'
   let disabilitato = false
@@ -32,7 +32,7 @@ export default function Topbar({ sezioneAttiva, statoMqtt, notifiche }) {
         <button
           className="btn btn-ghost"
           style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
-          onClick={richiediPermesso}
+          onClick={onToggleNotifiche}
           disabled={disabilitato}
         >
           {testoBottone}

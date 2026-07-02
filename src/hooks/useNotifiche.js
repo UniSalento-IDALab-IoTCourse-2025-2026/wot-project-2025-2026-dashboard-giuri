@@ -14,8 +14,13 @@ export function useNotifiche(onClickNotifica) {
   const permesso = supportate ? Notification.permission : 'denied'
 
   const mostra = useCallback(
-    (titolo, corpo, tagFisso = null) => {
-      if (!supportate || Notification.permission !== 'granted' || !abilitate) return
+    (titolo, corpo, tagFisso = null, ignoraAbilitato = false) => {
+      if (!supportate || Notification.permission !== 'granted') return
+      // ignoraAbilitato serve per la notifica di conferma mostrata subito
+      // dopo l'attivazione: in quel momento lo stato "abilitate" del
+      // render corrente è ancora false (setState è asincrono), quindi il
+      // controllo normale bloccherebbe sempre la prima notifica di test.
+      if (!ignoraAbilitato && !abilitate) return
       try {
         const notif = new Notification(titolo, {
           body: corpo,
@@ -49,7 +54,15 @@ export function useNotifiche(onClickNotifica) {
 
     if (Notification.permission === 'granted') {
       setAbilitate(true)
-      mostra('✓ Notifiche desktop attive', 'Riceverai una notifica per ogni nuovo episodio di anomalia rilevato.')
+      // true = ignora il gate su "abilitate" (vedi commento sopra):
+      // senza questo la notifica di test non partirebbe mai, perché
+      // lo stato "abilitate" non è ancora aggiornato in questo render.
+      mostra(
+        '✓ Notifiche desktop attive',
+        'Riceverai una notifica per ogni nuovo episodio di anomalia rilevato.',
+        null,
+        true
+      )
       return { esito: 'attivate' }
     }
 

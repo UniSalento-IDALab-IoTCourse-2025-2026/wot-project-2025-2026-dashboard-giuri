@@ -78,6 +78,23 @@ export default function Dashboard() {
   // ── Notifiche desktop ───────────────────────────────────────────────
   const notifiche = useNotifiche(() => setSezioneAttiva('anomalie'))
 
+  // Collega il toggle del bottone in Topbar ai toast in-app: la notifica
+  // di sistema del SO parte già da dentro richiediPermesso() (vedi
+  // useNotifiche.js), qui gestiamo solo il feedback per gli altri esiti.
+  async function toggleNotifiche() {
+    const { esito } = await notifiche.richiediPermesso()
+
+    if (esito === 'disattivate') {
+      showToast('success', 'Notifiche disattivate', 'Non riceverai più notifiche di sistema per le anomalie')
+    } else if (esito === 'bloccate') {
+      showToast('alarm', 'Notifiche bloccate', 'Sbloccale dalle impostazioni del browser per riattivarle')
+    } else if (esito === 'negato') {
+      showToast('alarm', 'Permesso negato', 'Non è stato possibile attivare le notifiche desktop')
+    }
+    // 'attivate' non genera un toast in-app: la conferma è già la
+    // notifica di sistema mostrata da richiediPermesso() stesso
+  }
+
   // ── MQTT: allarmi in tempo reale ────────────────────────────────────
   const gestisciAllarme = useCallback(
     (msg) => {
@@ -182,7 +199,12 @@ export default function Dashboard() {
       />
 
       <div className="main">
-        <Topbar sezioneAttiva={sezioneAttiva} statoMqtt={statoMqtt} notifiche={notifiche} />
+        <Topbar
+          sezioneAttiva={sezioneAttiva}
+          statoMqtt={statoMqtt}
+          notifiche={notifiche}
+          onToggleNotifiche={toggleNotifiche}
+        />
 
         <div className="content">
           {sezioneAttiva === 'panoramica' && (
