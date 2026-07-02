@@ -56,7 +56,11 @@ export default function Storico({ pazienti, onApriEpisodio, refreshSignal }) {
             </option>
           ))}
         </select>
-        <button className="btn btn-ghost" onClick={caricaStorico} disabled={!pazienteId || caricamento}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => caricaStorico()}
+          disabled={!pazienteId || caricamento}
+        >
           {caricamento ? 'Caricamento...' : 'Carica'}
         </button>
         {episodi !== null && (
