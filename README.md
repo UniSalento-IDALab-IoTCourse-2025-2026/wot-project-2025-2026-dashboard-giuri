@@ -186,7 +186,3 @@ cardiosense-dashboard/
 - Lo stato applicativo (episodi, pazienti, KPI, modali) è centralizzato in `Dashboard.jsx` con `useState`/`useEffect`, senza librerie di state management esterne: il volume di stato non lo giustifica.
 - Il debounce sugli allarmi per evitare N beep per lo stesso episodio (`DEBOUNCE_ALLARME_MS = 15000`, coerente con `GAP_MASSIMO_EPISODIO_SECONDI` lato backend) è mantenuto identico all'originale.
 - `React.StrictMode` in sviluppo monta/smonta gli effetti due volte: la connessione MQTT si ricrea correttamente grazie al cleanup in `useMqtt` (`client.end(true)`), ma se noti doppie sottoscrizioni nei log del browser durante `npm run dev` è un comportamento atteso di React in dev, non un bug — sparisce in build di produzione.
-
-## Ambiente in cui è stato generato questo progetto
-
-I file sono stati scritti e revisionati manualmente (import/export, corrispondenza props) ma **non è stato possibile eseguire `npm install` / `npm run build`** nell'ambiente di generazione per assenza di accesso alla rete. Esegui tu i comandi della sezione [Installazione](#installazione) come primo test: se emergono errori di sintassi o import mancanti, sono correggibili puntualmente senza rimettere in discussione l'architettura del progetto.
