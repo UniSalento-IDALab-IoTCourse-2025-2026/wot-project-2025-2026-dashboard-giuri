@@ -1,16 +1,16 @@
 # CardioSense — Dashboard medico (React)
 
-Porting React (Vite) della dashboard medico originariamente scritta in HTML/CSS/JS vanilla nel repository principale **CardioSense**. Stessa identità visiva, stessa logica applicativa (polling REST + MQTT via WebSocket), riorganizzata in componenti.
+Dashboard medico di CardioSense, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository principale **CardioSense** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
 
-Questo repo **non contiene backend**: si collega via rete (HTTPS + WSS) al backend FastAPI/Mosquitto del repo principale, esattamente come faceva la dashboard originale in `dashboard/`.
+Questo repository contiene solo il frontend: nessun backend, nessun database, nessun broker.
 
 ---
 
 ## Prerequisiti
 
-- Node.js 18+ (consigliato 20 LTS)
-- Il backend CardioSense (repo principale) in esecuzione — Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
-- [mkcert](https://github.com/FiloSottile/mkcert) — stessi certificati già generati per il repo principale, per evitare warning TLS nel browser
+- Node.js 18+ (consigliata la versione 20 LTS)
+- Backend CardioSense in esecuzione (repo principale): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
+- [mkcert](https://github.com/FiloSottile/mkcert), con gli stessi certificati già generati per il repo principale
 
 ## Installazione
 
@@ -19,7 +19,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Apri `.env.local` e valorizza:
+Valorizza `.env.local`:
 
 ```bash
 VITE_API_URL=https://localhost:8443
@@ -28,9 +28,13 @@ VITE_TLS_CERT=/percorso/assoluto/a/mosquitto/certs/server.crt
 VITE_TLS_KEY=/percorso/assoluto/a/mosquitto/certs/server.key
 ```
 
-I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati da Mosquitto e FastAPI nel repo principale (cartella `mosquitto/certs/`), così il browser li riconosce già come fidati grazie a `mkcert -install` e non servono certificati separati per questo progetto.
+I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati da Mosquitto e FastAPI nel repo principale (cartella `mosquitto/certs/`). Non copiare i certificati in questo repository: vanno referenziati da lì tramite percorso assoluto, così restano un'unica fonte di verità e `server.key` non viene mai duplicata in un secondo repository.
 
-> Se lasci `VITE_TLS_CERT`/`VITE_TLS_KEY` vuoti, il dev server parte in HTTP semplice — utile solo se il backend gira anch'esso senza TLS (`MQTT_TLS_ENABLED=false` e FastAPI senza `ssl_keyfile`/`ssl_certfile`).
+> Su Windows, usa gli slash forward anche nei percorsi Windows (`C:/Users/nome/CardioSense/mosquitto/certs/server.crt`), non i backslash. Il parser di `dotenv` interpreta `\n`, `\t`, `\"` come sequenze di escape anche dentro percorsi tra virgolette, e un backslash seguito dalla lettera sbagliata rompe il valore silenziosamente.
+
+> `.env.local` è escluso da Git. `.env.example` deve contenere solo placeholder generici, mai percorsi reali.
+
+> Se `VITE_TLS_CERT`/`VITE_TLS_KEY` sono vuoti, il dev server parte in HTTP semplice — utile solo se anche il backend gira senza TLS (`MQTT_TLS_ENABLED=false` e FastAPI senza `ssl_keyfile`/`ssl_certfile`).
 
 ## Avvio in sviluppo
 
@@ -38,7 +42,7 @@ I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati d
 npm run dev
 ```
 
-Il dev server parte su `https://localhost:5173` (o la prima porta libera). Se lo apri in `http://` invece di `https://`, il browser bloccherà comunque la connessione al broker MQTT su `wss://` per mixed-content: usa sempre l'URL `https://`.
+Il dev server parte su `https://localhost:5173` (o la prima porta libera). Se aperto in `http://` invece di `https://`, il browser blocca comunque la connessione al broker su `wss://` per mixed-content.
 
 ## Build di produzione
 
@@ -47,13 +51,13 @@ npm run build     # genera dist/
 npm run preview   # serve dist/ in locale per un ultimo controllo
 ```
 
+`npm run build` produce solo file statici, pensati per essere serviti da un hosting statico o una CDN (es. S3 + CloudFront), non per essere serviti da `vite preview` in produzione. In quello scenario `VITE_TLS_CERT`/`VITE_TLS_KEY` non servono: il TLS viene terminato dall'infrastruttura (es. CloudFront/ALB con certificato ACM), e `VITE_API_URL`/`VITE_BROKER_URL` vanno impostati sui domini pubblici reali del backend a build-time.
+
 ---
 
-## Come testare l'intero flusso end-to-end
+## Test end-to-end
 
-Questi passaggi replicano esattamente il test che facevi con la dashboard HTML originale — cambia solo da dove viene servito il frontend.
-
-### 1. Avvia l'infrastruttura e il backend (repo principale `cardiosense/`)
+### 1. Avvia l'infrastruttura e il backend (repo principale)
 
 ```bash
 # terminale 1 — infrastruttura
@@ -75,67 +79,63 @@ curl -k https://localhost:8443/health
 # {"status":"ok","timestamp":"..."}
 ```
 
-### 2. Avvia questo progetto React (repo separato)
+### 2. Avvia questo progetto
 
 ```bash
 npm install
 npm run dev
 ```
 
-Apri `https://localhost:5173`. Il browser dovrebbe mostrare la CA mkcert come fidata (nessun warning) se hai puntato `.env.local` agli stessi certificati del backend.
+Apri `https://localhost:5173`. Se `.env.local` punta agli stessi certificati del backend, il browser mostra la CA mkcert come fidata, senza warning.
 
-### 3. Test del login
+### 3. Login
 
-- Se non hai ancora un medico registrato, crealo con:
-  ```bash
-  curl -k -X POST https://localhost:8443/auth/registrazione \
-    -H "Content-Type: application/json" \
-    -d '{"nome":"Mario","cognome":"Rossi","email":"medico@test.it","password":"password123"}'
-  ```
-- Accedi dalla pagina di login React con quelle credenziali.
-- **Verifica**: dopo il login vieni reindirizzato alla dashboard, il pallino MQTT in alto a destra passa da "Connessione MQTT..." (ambra) a "MQTT connesso" (teal) entro pochi secondi.
+Se non esiste ancora un medico registrato:
 
-### 4. Test creazione paziente
+```bash
+curl -k -X POST https://localhost:8443/auth/registrazione \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Mario","cognome":"Rossi","email":"medico@test.it","password":"password123"}'
+```
 
-- Sezione **Pazienti** → **+ Nuovo paziente** → inserisci nome/cognome.
-- **Verifica**: viene mostrato un codice di accesso a 8 caratteri; il paziente compare nella griglia; il KPI "Pazienti monitorati" in Panoramica si aggiorna.
+Accedi dalla pagina di login con quelle credenziali. Dopo il login il pallino MQTT in Topbar passa da "Connessione MQTT..." (ambra) a "MQTT connesso" (teal) entro pochi secondi.
 
-### 5. Test del flusso anomalia → notifica → validazione (il test più importante)
+### 4. Creazione paziente
 
-Nel repo principale, con `PAZIENTE_ID` in `simulate_stream.py` allineato al `codice_accesso` del paziente appena creato (modifica la costante o passa il paziente giusto), lancia il simulatore:
+Sezione **Pazienti** → **+ Nuovo paziente** → nome e cognome. Viene mostrato un codice di accesso a 8 caratteri; il paziente compare nella griglia; il KPI "Pazienti monitorati" in Panoramica si aggiorna.
+
+### 5. Flusso anomalia → notifica → validazione
+
+Nel repo principale, con `PAZIENTE_ID` in `simulate_stream.py` allineato al `codice_accesso` del paziente appena creato:
 
 ```bash
 cd backend/simulation
 python simulate_stream.py --scenario anomalia_ecg --durata 30
 ```
 
-**Verifica in ordine:**
+Verifica, in ordine:
 
-1. Entro 1-2s dall'inizio dello stream, in React parte il **beep sonoro** e appare un **toast rosso** in alto a destra — prova che il WebSocket MQTT sta ricevendo `cardiosense/allarmi` in tempo reale.
-2. Se hai cliccato "Attiva notifiche desktop" nella Topbar e concesso il permesso al browser, arriva anche una **notifica di sistema** nativa OS.
-3. Il badge rosso sulla voce **Anomalie** nella sidebar si aggiorna con il conteggio.
-4. Vai su **Anomalie** → dovresti vedere l'episodio raggruppato (non 30 righe singole) con lo score picco/medio.
-5. Clicca **Valida** → si apre il modal:
-   - Il grafico ECG esteso inizialmente mostra "Traccia ECG in elaborazione" (i campioni post-anomalia non sono ancora arrivati).
-   - Dopo qualche secondo clicca **Riprova**: dovrebbe apparire il tracciato SVG con la linea rossa tratteggiata sul picco.
+1. Entro 1-2s, beep sonoro e toast rosso in alto a destra — conferma che il WebSocket riceve `cardiosense/allarmi` in tempo reale.
+2. Con le notifiche desktop attivate (Topbar), arriva anche una notifica di sistema nativa.
+3. Il badge sulla voce **Anomalie** nella sidebar si aggiorna con il conteggio.
+4. In **Anomalie**, l'episodio compare raggruppato (non come righe singole), con lo score picco/medio.
+5. **Valida** → si apre il modal:
+   - Il grafico ECG mostra inizialmente "Traccia ECG in elaborazione" (i campioni post-anomalia non sono ancora arrivati).
+   - Dopo qualche secondo, **Riprova** mostra il tracciato SVG con la linea rossa tratteggiata sul picco.
    - Seleziona **Vero positivo** o **Falso allarme**, aggiungi una nota, conferma.
-6. **Verifica**: toast verde di conferma, il KPI "Validate oggi" in Panoramica incrementa, l'episodio sparisce dalla coda Anomalie.
+6. Toast verde di conferma; il KPI "Validate oggi" incrementa; l'episodio esce dalla coda Anomalie.
 
-### 6. Test dello storico
+### 6. Storico
 
-- Sezione **Storico** → seleziona il paziente → **Carica**.
-- **Verifica**: l'episodio appena validato compare con il bordo colorato coerente (rosso = vero positivo, verde = falso allarme) e la nota clinica in corsivo.
-- Cliccalo → il modal si riapre in modalità dettaglio con il banner dell'esito già mostrato e il pulsante **"Aggiorna validazione"**; prova a cambiare esito e confermare — verifica che la lista storico si ricarichi da sola senza dover ricliccare "Carica".
+Sezione **Storico** → seleziona il paziente → **Carica**. L'episodio validato compare con il bordo colorato coerente (rosso = vero positivo, verde = falso allarme) e la nota clinica in corsivo. Cliccandolo, il modal si riapre in modalità dettaglio con il pulsante **"Aggiorna validazione"**; cambiando esito e confermando, la lista si ricarica da sola senza dover ricliccare "Carica".
 
-### 7. Test di robustezza connessione
+### 7. Robustezza connessione
 
-- Ferma `mqtt_subscriber.py` o Mosquitto (`docker-compose stop mosquitto`) mentre la dashboard è aperta.
-- **Verifica**: il pallino in Topbar diventa rosso ("MQTT disconnesso"), poi ambra ("Riconnessione...") quando riavvii Mosquitto — senza dover ricaricare la pagina (gestito da `reconnectPeriod` di mqtt.js).
+Ferma `mqtt_subscriber.py` o Mosquitto (`docker-compose stop mosquitto`) a dashboard aperta. Il pallino in Topbar diventa rosso ("MQTT disconnesso"), poi ambra ("Riconnessione...") al riavvio di Mosquitto, senza ricaricare la pagina.
 
-### 8. Test logout / sessione scaduta
+### 8. Logout / sessione scaduta
 
-- Clicca **Esci dall'account** in sidebar → torni alla pagina di login e `localStorage` non contiene più `cs_token`.
-- Per testare la scadenza token: modifica temporaneamente `ACCESS_TOKEN_EXPIRE_MINUTES` in `fastapi_server.py` a un valore molto basso, fai login, aspetta la scadenza, esegui un'azione (es. Aggiorna anomalie) → dovresti essere reindirizzato automaticamente al login (gestito da `apiFetch` → `onUnauthorized`).
+**Esci dall'account** in sidebar riporta al login e rimuove `cs_token` da `localStorage`. Per testare la scadenza: riduci temporaneamente `ACCESS_TOKEN_EXPIRE_MINUTES` in `fastapi_server.py`, fai login, aspetta la scadenza, esegui un'azione (es. Aggiorna anomalie) → reindirizzamento automatico al login.
 
 ---
 
@@ -162,7 +162,7 @@ cardiosense-dashboard/
     ├── utils/
     │   └── format.js            # formattazione timestamp/durata episodio
     ├── styles/
-    │   └── global.css           # porting 1:1 delle variabili/classi CSS originali
+    │   └── global.css           # variabili/classi CSS condivise con la dashboard originale
     ├── pages/
     │   ├── Login.jsx            # animazione ECG canvas + form
     │   └── Dashboard.jsx        # orchestrazione stato, polling, MQTT, modali
@@ -180,9 +180,9 @@ cardiosense-dashboard/
             └── Storico.jsx
 ```
 
-## Note di porting
+## Note tecniche
 
-- **Nessuna modifica al backend è necessaria**: CORS è già `allow_origins=["*"]` in `fastapi_server.py`, quindi questo frontend consuma le stesse API REST e lo stesso topic MQTT (`cardiosense/allarmi`) dell'originale.
-- Lo stato applicativo (episodi, pazienti, KPI, modali) è centralizzato in `Dashboard.jsx` con `useState`/`useEffect`, senza librerie di state management esterne: il volume di stato non lo giustifica.
-- Il debounce sugli allarmi per evitare N beep per lo stesso episodio (`DEBOUNCE_ALLARME_MS = 15000`, coerente con `GAP_MASSIMO_EPISODIO_SECONDI` lato backend) è mantenuto identico all'originale.
-- `React.StrictMode` in sviluppo monta/smonta gli effetti due volte: la connessione MQTT si ricrea correttamente grazie al cleanup in `useMqtt` (`client.end(true)`), ma se noti doppie sottoscrizioni nei log del browser durante `npm run dev` è un comportamento atteso di React in dev, non un bug — sparisce in build di produzione.
+- Lo stato applicativo (episodi, pazienti, KPI, modali) è centralizzato in `Dashboard.jsx` con `useState`/`useEffect`, senza librerie di state management esterne.
+- Il debounce sugli allarmi per evitare più notifiche per lo stesso episodio (`DEBOUNCE_ALLARME_MS = 15000`) è coerente con `GAP_MASSIMO_EPISODIO_SECONDI` lato backend.
+- `React.StrictMode` monta/smonta gli effetti due volte in sviluppo: la connessione MQTT si ricrea correttamente grazie al cleanup in `useMqtt` (`client.end(true)`). Eventuali doppie sottoscrizioni nei log durante `npm run dev` sono comportamento atteso di React in sviluppo e non compaiono in build di produzione.
+- CORS: in sviluppo, `fastapi_server.py` accetta l'origine di questo dev server. In produzione `allow_origins` sul backend va ristretto esplicitamente al dominio reale della dashboard deployata — un wildcard (`*`) combinato con `allow_credentials=True` va evitato.
