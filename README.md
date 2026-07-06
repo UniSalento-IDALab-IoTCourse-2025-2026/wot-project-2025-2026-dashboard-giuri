@@ -1,16 +1,123 @@
-# CardioSense — Dashboard medico (React)
+<div align="center">
 
-Dashboard medico di CardioSense, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository principale **CardioSense** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
+<img src="public/favicon.svg" width="80" height="80" alt="CardioSense logo">
 
-Questo repository contiene solo il frontend: nessun backend, nessun database, nessun broker.
+# CardioSense — Dashboard medico
+
+### Sistema IoT real-time per il monitoraggio closed-loop di pazienti con scompenso cardiaco
+
+[![React](https://img.shields.io/badge/React-Dashboard-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-Build-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![MQTT](https://img.shields.io/badge/MQTT-WebSocket-3C5280?logo=eclipsemosquitto&logoColor=white)](https://mosquitto.org/)
+
+</div>
+
+---
+
+## Indice
+
+- [Panoramica del progetto](#panoramica-del-progetto)
+- [Architettura del sistema](#architettura-del-sistema)
+- [Repository collegati](#repository-collegati)
+- [Questo repository: Dashboard medico](#questo-repository-dashboard-medico)
+- [Prerequisiti](#prerequisiti)
+- [Installazione](#installazione)
+- [Avvio in sviluppo](#avvio-in-sviluppo)
+- [Build di produzione](#build-di-produzione)
+- [Test end-to-end](#test-end-to-end)
+- [Struttura del progetto](#struttura-del-progetto)
+- [Note tecniche](#note-tecniche)
+- [Contesto accademico](#contesto-accademico)
+
+---
+
+## Panoramica del progetto
+
+**CardioSense** è un sistema IoT end-to-end per il monitoraggio in tempo reale di pazienti affetti da **insufficienza cardiaca congestizia**. Il sistema acquisisce segnali fisiologici (ECG, postura tramite IMU a 6 assi — accelerometro + giroscopio, temperatura corporea) da un dispositivo wearable, li classifica tramite modelli di Machine Learning per rilevare anomalie cliniche, e mette in comunicazione diretta **paziente** e **medico** attraverso un'architettura event-driven basata su MQTT, con persistenza su database e validazione clinica delle anomalie rilevate.
+
+Il progetto nasce con l'obiettivo di costruire — partendo da un dispositivo di acquisizione biomedicale esistente (**IIT BioDataAcq**) — un sistema cloud-like completo: dall'acquisizione del segnale grezzo fino alla dashboard clinica, passando per classificazione automatica, notifiche in tempo reale e un ciclo di **retraining periodico** dei modelli sulla base delle validazioni mediche.
+
+> 🩺 **Closed-loop**: ogni anomalia rilevata automaticamente viene validata da un medico (vero positivo / falso allarme); queste validazioni rientrano nel dataset di addestramento per ri-calibrare periodicamente il classificatore ECG, chiudendo il ciclo tra IA e giudizio clinico.
+
+---
+
+## Architettura del sistema
+
+> Lo schema sotto mostra l'intero sistema end-to-end. Questo repository implementa il blocco **Dashboard Web (medico)**, evidenziato di seguito.
+
+```
+                ┌───────────────────────────────────────────────────────────────┐
+                │ App Python "IIT BioDataAcq" + dongle USB/BLE  (repo separato) │
+                │ (acquisizione segnali grezzi: ECG, IMU acc+gyro, Temperatura) │
+                └───────────────────────────────────────────────────────────────┘
+                                                │
+                                                │  layer non invasivo (mqtt_bridge.py)
+                                                ▼
+                                                  MQTT su TLS (mkcert)
+                                                │
+                                 ┌─────────────────────────────┐
+                                 │ Broker Mosquitto            │
+                                 │ (porte 8883 TLS · 9002 WSS) │
+                                 └─────────────────────────────┘
+                                                │
+                          ┌─────────────────────┴──────────────────────┐
+                          ▼                                            ▼
+  ┌───────────────────────────────────────────────┐       ┌──────────────────────────┐
+  │ mqtt_subscriber.py  (repo backend)             │       │ fastapi_server.py         │
+  │ • Classificazione ECG / Postura / Temperatura  │       │ (repo backend)            │
+  │ • Salvataggio annotazioni su MongoDB           │       │ • REST API (JWT auth)     │
+  │ • Notifiche allarme → medico                   │       │ • CRUD pazienti / medici  │
+  └───────────────────────────────────────────────┘       │ • Validazione episodi     │
+                          │                                └──────────────────────────┘
+                          ▼                                            │
+         ┌─────────────────────────────────┐                           │
+         │ MongoDB / MySQL (repo backend)  │                           │
+         └─────────────────────────────────┘                           │
+                                                                        ▼
+                                              ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐
+                                                ██ QUESTO REPOSITORY ██
+                                              │  Dashboard Web (medico)             │
+                                                React (Vite) · MQTT via WebSocket
+                                              │  REST via HTTPS                    │
+                                                └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+```
+
+La dashboard **non ospita né logica di classificazione, né persistenza, né broker**: consuma esclusivamente le API REST esposte da `fastapi_server.py` e il topic MQTT `cardiosense/allarmi` via WebSocket, entrambi forniti dal repository backend.
+
+---
+
+## Repository collegati
+
+| Repository | Contenuto | Stato |
+|---|---|---|
+| **[CardioSense — Backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** | Backend: classificazione ML, API REST, persistenza (MongoDB/MySQL), broker MQTT, notifiche | Privato |
+| **[cardiosense-dashboard](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-dashboard-giuri)** *(questo repo)* | Dashboard medico in React (Vite) | Privato |
+| **[IIT BioDataAcq](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-patient-app-giuri)** | App Kivy di acquisizione segnali via dongle USB/BLE — base fornita da IIT, con layer di integrazione MQTT sviluppato per questo progetto | Repository distinto |
+
+---
+
+## Questo repository: Dashboard medico
+
+Dashboard medico di CardioSense, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
+
+Questo repository contiene **solo il frontend**: nessun backend, nessun database, nessun broker.
+
+**Funzionalità principali:**
+
+- 📊 **Panoramica**: KPI in tempo reale (pazienti monitorati, anomalie in attesa, validazioni del giorno)
+- 🚨 **Anomalie**: coda di episodi da validare, raggruppati clinicamente, con notifica push via MQTT + beep sonoro
+- 🧑‍⚕️ **Pazienti**: creazione e gestione, con generazione automatica del codice di accesso
+- 🗂️ **Storico**: episodi passati per paziente, validati e in attesa, con traccia ECG e note cliniche
+- 🔔 **Notifiche desktop**: Web Notifications API + allarme sonoro via Web Audio API
+- 🔐 **Autenticazione**: login JWT, gestione sessione e scadenza token
 
 ---
 
 ## Prerequisiti
 
 - Node.js 18+ (consigliata la versione 20 LTS)
-- Backend CardioSense in esecuzione (repo principale): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
-- [mkcert](https://github.com/FiloSottile/mkcert), con gli stessi certificati già generati per il repo principale
+- Backend CardioSense in esecuzione (repo **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)**): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
+- [mkcert](https://github.com/FiloSottile/mkcert), con gli stessi certificati già generati per il repo backend
 
 ## Installazione
 
@@ -28,7 +135,7 @@ VITE_TLS_CERT=/percorso/assoluto/a/mosquitto/certs/server.crt
 VITE_TLS_KEY=/percorso/assoluto/a/mosquitto/certs/server.key
 ```
 
-I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati da Mosquitto e FastAPI nel repo principale (cartella `mosquitto/certs/`). Non copiare i certificati in questo repository: vanno referenziati da lì tramite percorso assoluto, così restano un'unica fonte di verità e `server.key` non viene mai duplicata in un secondo repository.
+I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati da Mosquitto e FastAPI nel repo backend (cartella `mosquitto/certs/`). Non copiare i certificati in questo repository: vanno referenziati da lì tramite percorso assoluto, così restano un'unica fonte di verità e `server.key` non viene mai duplicata in un secondo repository.
 
 > Su Windows, usa gli slash forward anche nei percorsi Windows (`C:/Users/nome/CardioSense/mosquitto/certs/server.crt`), non i backslash. Il parser di `dotenv` interpreta `\n`, `\t`, `\"` come sequenze di escape anche dentro percorsi tra virgolette, e un backslash seguito dalla lettera sbagliata rompe il valore silenziosamente.
 
@@ -57,7 +164,7 @@ npm run preview   # serve dist/ in locale per un ultimo controllo
 
 ## Test end-to-end
 
-### 1. Avvia l'infrastruttura e il backend (repo principale)
+### 1. Avvia l'infrastruttura e il backend (repo backend)
 
 ```bash
 # terminale 1 — infrastruttura
@@ -106,7 +213,7 @@ Sezione **Pazienti** → **+ Nuovo paziente** → nome e cognome. Viene mostrato
 
 ### 5. Flusso anomalia → notifica → validazione
 
-Nel repo principale, con `PAZIENTE_ID` in `simulate_stream.py` allineato al `codice_accesso` del paziente appena creato:
+Nel repo backend, con `PAZIENTE_ID` in `simulate_stream.py` allineato al `codice_accesso` del paziente appena creato:
 
 ```bash
 cd backend/simulation
@@ -186,3 +293,14 @@ cardiosense-dashboard/
 - Il debounce sugli allarmi per evitare più notifiche per lo stesso episodio (`DEBOUNCE_ALLARME_MS = 15000`) è coerente con `GAP_MASSIMO_EPISODIO_SECONDI` lato backend.
 - `React.StrictMode` monta/smonta gli effetti due volte in sviluppo: la connessione MQTT si ricrea correttamente grazie al cleanup in `useMqtt` (`client.end(true)`). Eventuali doppie sottoscrizioni nei log durante `npm run dev` sono comportamento atteso di React in sviluppo e non compaiono in build di produzione.
 - CORS: in sviluppo, `fastapi_server.py` accetta l'origine di questo dev server. In produzione `allow_origins` sul backend va ristretto esplicitamente al dominio reale della dashboard deployata — un wildcard (`*`) combinato con `allow_credentials=True` va evitato.
+
+---
+
+## Contesto accademico
+
+Componente sviluppato per l'esame di Internet of Things presso l'Università del Salento, in collaborazione con:
+
+- **IDA Lab** - Università del Salento
+- **IIT — Istituto Italiano di Tecnologia**
+
+Per la descrizione completa dell'intero sistema, la logica di backend e i modelli di Machine Learning, fare riferimento al README del repository **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)**.
