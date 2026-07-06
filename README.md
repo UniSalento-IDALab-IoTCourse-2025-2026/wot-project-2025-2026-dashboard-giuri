@@ -73,7 +73,7 @@ Il progetto nasce con l'obiettivo di costruire — partendo da un dispositivo di
          ┌─────────────────────────────────┐                           │
          │ MongoDB / MySQL (repo backend)  │                           │
          └─────────────────────────────────┘                           │
-                                                                        ▼
+                                                                       ▼
                                               ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐
                                                 ██ QUESTO REPOSITORY ██
                                               │  Dashboard Web (medico)             │
