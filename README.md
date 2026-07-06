@@ -63,12 +63,12 @@ Il progetto nasce con l'obiettivo di costruire — partendo da un dispositivo di
                           ┌─────────────────────┴──────────────────────┐
                           ▼                                            ▼
   ┌───────────────────────────────────────────────┐       ┌──────────────────────────┐
-  │ mqtt_subscriber.py  (repo backend)             │       │ fastapi_server.py         │
-  │ • Classificazione ECG / Postura / Temperatura  │       │ (repo backend)            │
-  │ • Salvataggio annotazioni su MongoDB           │       │ • REST API (JWT auth)     │
-  │ • Notifiche allarme → medico                   │       │ • CRUD pazienti / medici  │
-  └───────────────────────────────────────────────┘       │ • Validazione episodi     │
-                          │                                └──────────────────────────┘
+  │ mqtt_subscriber.py  (repo backend)            │       │ fastapi_server.py        │
+  │ • Classificazione ECG / Postura / Temperatura │       │ (repo backend)           │
+  │ • Salvataggio annotazioni su MongoDB          │       │ • REST API (JWT auth)    │
+  │ • Notifiche allarme → medico                  │       │ • CRUD pazienti / medici │
+  └───────────────────────────────────────────────┘       │ • Validazione episodi    │
+                          │                               └──────────────────────────┘
                           ▼                                            │
          ┌─────────────────────────────────┐                           │
          │ MongoDB / MySQL (repo backend)  │                           │
@@ -78,8 +78,8 @@ Il progetto nasce con l'obiettivo di costruire — partendo da un dispositivo di
                                                 ██ QUESTO REPOSITORY ██
                                               │  Dashboard Web (medico)             │
                                                 React (Vite) · MQTT via WebSocket
-                                              │  REST via HTTPS                    │
-                                                └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+                                              │  REST via HTTPS                     │
+                                              └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
 ```
 
 La dashboard **non ospita né logica di classificazione, né persistenza, né broker**: consuma esclusivamente le API REST esposte da `fastapi_server.py` e il topic MQTT `cardiosense/allarmi` via WebSocket, entrambi forniti dal repository backend.
