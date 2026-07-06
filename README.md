@@ -90,10 +90,9 @@ La dashboard **non ospita né logica di classificazione, né persistenza, né br
 
 | Repository | Contenuto | Stato |
 |---|---|---|
-| **[CardioSense — Backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** | Backend: classificazione ML, API REST, persistenza (MongoDB/MySQL), broker MQTT, notifiche | Privato |
-| **[cardiosense-dashboard](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-dashboard-giuri)** *(questo repo)* | Dashboard medico in React (Vite) | Privato |
-| **[IIT BioDataAcq](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-patient-app-giuri)** | App Kivy di acquisizione segnali via dongle USB/BLE — base fornita da IIT, con layer di integrazione MQTT sviluppato per questo progetto | Repository distinto |
-
+| **[CardioSense — Backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** | Backend: classificazione ML, API REST, persistenza (MongoDB/MySQL), broker MQTT, notifiche 
+| **[cardiosense-dashboard](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-dashboard-giuri)** *(questo repo)* | Dashboard medico in React (Vite)
+| **[IIT BioDataAcq](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-patient-app-giuri)** | App Kivy di acquisizione segnali via dongle USB/BLE — base fornita da IIT, con layer di integrazione MQTT sviluppato per questo progetto
 ---
 
 ## Questo repository: Dashboard medico
