@@ -99,9 +99,9 @@ export default function Login() {
         <div className="login-card">
           <div className="brand">
             <div className="brand-icon">
-              <img src="/favicon.svg" alt="CardioSense Logo" />
+              <img src="/favicon.svg" alt="SmartCare Logo" />
             </div>
-            <div className="brand-name">Cardio<span>Sense</span></div>
+            <div className="brand-name">Smart<span>Care</span></div>
           </div>
 
           <h1 className="login-title">Bentornato</h1>

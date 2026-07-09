@@ -13,9 +13,9 @@ export default function Sidebar({ sezioneAttiva, onNaviga, numeroAnomalie, medic
     <aside className="sidebar">
       <div className="sidebar-brand">
         <div className="brand-icon" style={{ width: 32, height: 32, borderRadius: 8 }}>
-          <img src="/favicon.svg" alt="CardioSense Logo" style={{ height: '1em', width: 'auto' }} />
+          <img src="/favicon.svg" alt="SmartCare Logo" style={{ height: '1em', width: 'auto' }} />
         </div>
-        <div className="brand-name" style={{ fontSize: '1rem' }}>Cardio<span>Sense</span></div>
+        <div className="brand-name" style={{ fontSize: '1rem' }}>Smart<span>Care</span></div>
       </div>
 
       <nav className="sidebar-nav">

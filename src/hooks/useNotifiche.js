@@ -24,7 +24,7 @@ export function useNotifiche(onClickNotifica) {
       try {
         const notif = new Notification(titolo, {
           body: corpo,
-          tag: tagFisso || `cardiosense-${Date.now()}`,
+          tag: tagFisso || `smartcare-${Date.now()}`,
           requireInteraction: true
         })
         notif.onclick = () => {

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="public/favicon.svg" width="80" height="80" alt="CardioSense logo">
+<img src="public/favicon.svg" width="80" height="80" alt="SmartCare logo">
 
-# CardioSense — Dashboard medico
+# SmartCare — Dashboard medico
 
 ### Sistema IoT real-time per il monitoraggio closed-loop di pazienti con scompenso cardiaco
 
@@ -33,7 +33,7 @@
 
 ## Panoramica del progetto
 
-**CardioSense** è un sistema IoT end-to-end per il monitoraggio in tempo reale di pazienti affetti da **insufficienza cardiaca congestizia**. Il sistema acquisisce segnali fisiologici (ECG, postura tramite IMU a 6 assi — accelerometro + giroscopio, temperatura corporea) da un dispositivo wearable, li classifica tramite modelli di Machine Learning per rilevare anomalie cliniche, e mette in comunicazione diretta **paziente** e **medico** attraverso un'architettura event-driven basata su MQTT, con persistenza su database e validazione clinica delle anomalie rilevate.
+**SmartCare** è un sistema IoT end-to-end per il monitoraggio in tempo reale di pazienti affetti da **insufficienza cardiaca congestizia**. Il sistema acquisisce segnali fisiologici (ECG, postura tramite IMU a 6 assi — accelerometro + giroscopio, temperatura corporea) da un dispositivo wearable, li classifica tramite modelli di Machine Learning per rilevare anomalie cliniche, e mette in comunicazione diretta **paziente** e **medico** attraverso un'architettura event-driven basata su MQTT, con persistenza su database e validazione clinica delle anomalie rilevate.
 
 Il progetto nasce con l'obiettivo di costruire — partendo da un dispositivo di acquisizione biomedicale esistente (**IIT BioDataAcq**) — un sistema cloud-like completo: dall'acquisizione del segnale grezzo fino alla dashboard clinica, passando per classificazione automatica, notifiche in tempo reale e un ciclo di **retraining periodico** dei modelli sulla base delle validazioni mediche.
 
@@ -82,7 +82,7 @@ Il progetto nasce con l'obiettivo di costruire — partendo da un dispositivo di
                                               └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
 ```
 
-La dashboard **non ospita né logica di classificazione, né persistenza, né broker**: consuma esclusivamente le API REST esposte da `fastapi_server.py` e il topic MQTT `cardiosense/allarmi` via WebSocket, entrambi forniti dal repository backend.
+La dashboard **non ospita né logica di classificazione, né persistenza, né broker**: consuma esclusivamente le API REST esposte da `fastapi_server.py` e il topic MQTT `smartcare/allarmi` via WebSocket, entrambi forniti dal repository backend.
 
 ---
 
@@ -90,14 +90,14 @@ La dashboard **non ospita né logica di classificazione, né persistenza, né br
 
 | Repository | Contenuto
 |---|---
-| **[CardioSense — Backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** | Backend: classificazione ML, API REST, persistenza (MongoDB/MySQL), broker MQTT, notifiche 
-| **[cardiosense-dashboard](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-dashboard-giuri)** *(questo repo)* | Dashboard medico in React (Vite)
+| **[SmartCare — Backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** | Backend: classificazione ML, API REST, persistenza (MongoDB/MySQL), broker MQTT, notifiche 
+| **[smartcare-dashboard](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-dashboard-giuri)** *(questo repo)* | Dashboard medico in React (Vite)
 | **[IIT BioDataAcq](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-patient-app-giuri)** | App Kivy di acquisizione segnali via dongle USB/BLE — base fornita da IIT, con layer di integrazione MQTT sviluppato per questo progetto
 ---
 
 ## Questo repository: Dashboard medico
 
-Dashboard medico di CardioSense, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
+Dashboard medico di SmartCare, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
 
 Questo repository contiene **solo il frontend**: nessun backend, nessun database, nessun broker.
 
@@ -115,32 +115,8 @@ Questo repository contiene **solo il frontend**: nessun backend, nessun database
 ## Prerequisiti
 
 - Node.js 18+ (consigliata la versione 20 LTS)
-- Backend CardioSense in esecuzione (repo **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)**): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
+- Backend SmartCare in esecuzione (repo **[backend](https://github.com/UniSalento-IDALab-IoTCourse-2025-2026/wot-project-2025-2026-backend-giuri)**): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
 - [mkcert](https://github.com/FiloSottile/mkcert), con gli stessi certificati già generati per il repo backend
-
-## Installazione
-
-```bash
-npm install
-cp .env.example .env.local
-```
-
-Valorizza `.env.local`:
-
-```bash
-VITE_API_URL=https://localhost:8443
-VITE_BROKER_URL=wss://localhost:9002
-VITE_TLS_CERT=/percorso/assoluto/a/mosquitto/certs/server.crt
-VITE_TLS_KEY=/percorso/assoluto/a/mosquitto/certs/server.key
-```
-
-I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati da Mosquitto e FastAPI nel repo backend (cartella `mosquitto/certs/`). Non copiare i certificati in questo repository: vanno referenziati da lì tramite percorso assoluto, così restano un'unica fonte di verità e `server.key` non viene mai duplicata in un secondo repository.
-
-> Su Windows, usa gli slash forward anche nei percorsi Windows (`C:/Users/nome/CardioSense/mosquitto/certs/server.crt`), non i backslash. Il parser di `dotenv` interpreta `\n`, `\t`, `\"` come sequenze di escape anche dentro percorsi tra virgolette, e un backslash seguito dalla lettera sbagliata rompe il valore silenziosamente.
-
-> `.env.local` è escluso da Git. `.env.example` deve contenere solo placeholder generici, mai percorsi reali.
-
-> Se `VITE_TLS_CERT`/`VITE_TLS_KEY` sono vuoti, il dev server parte in HTTP semplice — utile solo se anche il backend gira senza TLS (`MQTT_TLS_ENABLED=false` e FastAPI senza `ssl_keyfile`/`ssl_certfile`).
 
 ## Avvio in sviluppo
 
@@ -221,7 +197,7 @@ python simulate_stream.py --scenario anomalia_ecg --durata 30
 
 Verifica, in ordine:
 
-1. Entro 1-2s, beep sonoro e toast rosso in alto a destra — conferma che il WebSocket riceve `cardiosense/allarmi` in tempo reale.
+1. Entro 1-2s, beep sonoro e toast rosso in alto a destra — conferma che il WebSocket riceve `smartcare/allarmi` in tempo reale.
 2. Con le notifiche desktop attivate (Topbar), arriva anche una notifica di sistema nativa.
 3. Il badge sulla voce **Anomalie** nella sidebar si aggiorna con il conteggio.
 4. In **Anomalie**, l'episodio compare raggruppato (non come righe singole), con lo score picco/medio.
@@ -248,7 +224,7 @@ Ferma `mqtt_subscriber.py` o Mosquitto (`docker-compose stop mosquitto`) a dashb
 ## Struttura del progetto
 
 ```
-cardiosense-dashboard/
+smartcare-dashboard/
 ├── index.html                  # entry point Vite
 ├── vite.config.js              # dev server + HTTPS opzionale (mkcert)
 ├── .env.example

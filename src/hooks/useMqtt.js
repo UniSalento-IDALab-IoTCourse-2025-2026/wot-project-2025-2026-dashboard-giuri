@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import mqtt from 'mqtt'
 
 const BROKER_URL = import.meta.env.VITE_BROKER_URL || 'wss://localhost:9002'
-const TOPIC_ALLARMI = 'cardiosense/allarmi'
+const TOPIC_ALLARMI = 'smartcare/allarmi'
 
 /**
  * Si connette al broker Mosquitto via WebSocket e si sottoscrive al

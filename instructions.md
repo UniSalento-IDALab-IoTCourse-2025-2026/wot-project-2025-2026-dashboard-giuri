@@ -1,6 +1,6 @@
-# CardioSense — Dashboard medico (React)
+# SmartCare — Dashboard medico (React)
 
-Dashboard medico di CardioSense, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository principale **CardioSense** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
+Dashboard medico di CardioSense, realizzata in React (Vite). Si collega al backend FastAPI e al broker Mosquitto del repository principale **SmartCare** tramite REST (HTTPS) e MQTT via WebSocket (WSS).
 
 Questo repository contiene solo il frontend: nessun backend, nessun database, nessun broker.
 
@@ -9,32 +9,8 @@ Questo repository contiene solo il frontend: nessun backend, nessun database, ne
 ## Prerequisiti
 
 - Node.js 18+ (consigliata la versione 20 LTS)
-- Backend CardioSense in esecuzione (repo principale): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
+- Backend SmartCare in esecuzione (repo principale): Mosquitto, MongoDB, MySQL, `fastapi_server.py`, `mqtt_subscriber.py`
 - [mkcert](https://github.com/FiloSottile/mkcert), con gli stessi certificati già generati per il repo principale
-
-## Installazione
-
-```bash
-npm install
-cp .env.example .env.local
-```
-
-Valorizza `.env.local`:
-
-```bash
-VITE_API_URL=https://localhost:8443
-VITE_BROKER_URL=wss://localhost:9002
-VITE_TLS_CERT=/percorso/assoluto/a/mosquitto/certs/server.crt
-VITE_TLS_KEY=/percorso/assoluto/a/mosquitto/certs/server.key
-```
-
-I percorsi dei certificati devono puntare agli stessi file `.crt`/`.key` usati da Mosquitto e FastAPI nel repo principale (cartella `mosquitto/certs/`). Non copiare i certificati in questo repository: vanno referenziati da lì tramite percorso assoluto, così restano un'unica fonte di verità e `server.key` non viene mai duplicata in un secondo repository.
-
-> Su Windows, usa gli slash forward anche nei percorsi Windows (`C:/Users/nome/CardioSense/mosquitto/certs/server.crt`), non i backslash. Il parser di `dotenv` interpreta `\n`, `\t`, `\"` come sequenze di escape anche dentro percorsi tra virgolette, e un backslash seguito dalla lettera sbagliata rompe il valore silenziosamente.
-
-> `.env.local` è escluso da Git. `.env.example` deve contenere solo placeholder generici, mai percorsi reali.
-
-> Se `VITE_TLS_CERT`/`VITE_TLS_KEY` sono vuoti, il dev server parte in HTTP semplice — utile solo se anche il backend gira senza TLS (`MQTT_TLS_ENABLED=false` e FastAPI senza `ssl_keyfile`/`ssl_certfile`).
 
 ## Avvio in sviluppo
 
@@ -115,7 +91,7 @@ python simulate_stream.py --scenario anomalia_ecg --durata 30
 
 Verifica, in ordine:
 
-1. Entro 1-2s, beep sonoro e toast rosso in alto a destra — conferma che il WebSocket riceve `cardiosense/allarmi` in tempo reale.
+1. Entro 1-2s, beep sonoro e toast rosso in alto a destra — conferma che il WebSocket riceve `smartcare/allarmi` in tempo reale.
 2. Con le notifiche desktop attivate (Topbar), arriva anche una notifica di sistema nativa.
 3. Il badge sulla voce **Anomalie** nella sidebar si aggiorna con il conteggio.
 4. In **Anomalie**, l'episodio compare raggruppato (non come righe singole), con lo score picco/medio.
@@ -142,7 +118,7 @@ Ferma `mqtt_subscriber.py` o Mosquitto (`docker-compose stop mosquitto`) a dashb
 ## Struttura del progetto
 
 ```
-cardiosense-dashboard/
+smartcare-dashboard/
 ├── index.html                  # entry point Vite
 ├── vite.config.js              # dev server + HTTPS opzionale (mkcert)
 ├── .env.example

@@ -110,7 +110,7 @@ export default function Dashboard() {
         notifiche.mostra(
           `⚠ Anomalia ECG — Paziente ${pazienteId}`,
           `Score: ${(msg.ecg_score * 100).toFixed(0)}% · Temp: ${msg.temperatura_label} · ${ora}`,
-          `cardiosense-episodio-${pazienteId}`
+          `smartcare-episodio-${pazienteId}`
         )
       }
 

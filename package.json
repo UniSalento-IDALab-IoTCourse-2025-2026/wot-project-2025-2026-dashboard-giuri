@@ -1,9 +1,9 @@
 {
-  "name": "cardiosense-dashboard",
+  "name": "smartcare-dashboard",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Dashboard medico di CardioSense — porting React del frontend originariamente in HTML/JS vanilla.",
+  "description": "Dashboard medico di SmartCare — porting React del frontend originariamente in HTML/JS vanilla.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
